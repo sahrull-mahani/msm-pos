@@ -1,0 +1,164 @@
+<div class="p-8" x-data="productPage()" x-init="init()">
+
+    <header class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold italic">Manajemen <span class="text-blue-500">Produk</span></h1>
+        </div>
+        <div class="flex gap-3">
+            <button @click="showCategoryModal = true"
+                class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl font-bold transition flex items-center gap-2 border border-slate-600 shadow-lg">
+                📁 Kategori
+            </button>
+
+            <button @click="openAddModal()"
+                class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold transition flex items-center gap-2 shadow-lg shadow-blue-900/40">
+                <span>+</span> Tambah Produk
+            </button>
+        </div>
+    </header>
+
+    <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-900/50 text-slate-400 text-xs uppercase">
+                <tr>
+                    <th class="p-4">Produk</th>
+                    <th class="p-4">Kategori</th>
+                    <th class="p-4">Harga & Modal</th>
+                    <th class="p-4">Stok</th>
+                    <th class="p-4 text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700">
+                <template x-if="products.length === 0">
+                    <tr>
+                        <td colspan="5" class="p-10 text-center text-slate-500 italic">
+                            Belum ada data produk. Klik "Tambah Produk" atau jalankan Seeder.
+                        </td>
+                    </tr>
+                </template>
+                <template x-for="product in products" :key="product.id">
+                    <tr class="hover:bg-slate-700/30 transition">
+                        <td class="p-4">
+                            <div class="font-bold text-white" x-text="product.name"></div>
+                            <div class="text-blue-400 font-mono text-[10px]" x-text="product.barcode"></div>
+                        </td>
+                        <td class="p-4 text-sm text-slate-400" x-text="getCategoryName(product.category_id)"></td>
+                        <td class="p-4 text-sm">
+                            <div class="text-green-400 font-bold" x-text="'Rp ' + product.price.toLocaleString()"></div>
+                            <div class="text-slate-500 text-xs" x-text="'Modal: Rp ' + product.cost.toLocaleString()">
+                            </div>
+                        </td>
+                        <td class="p-4">
+                            <span
+                                :class="product.stock <= product.min_stock ? 'bg-red-900/30 text-red-500 border-red-500/20' : 'bg-green-900/30 text-green-500 border-green-500/20'"
+                                class="px-3 py-1 rounded-lg text-xs font-bold border" x-text="product.stock + ' Pcs'">
+                            </span>
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="flex justify-center gap-2">
+                                <button @click="openEditModal(product)"
+                                    class="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500 hover:text-white transition">✏️</button>
+                                <button @click="confirmDelete(product.id)"
+                                    class="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <div x-show="showCategoryModal"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" x-cloak>
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-2xl p-6"
+            @click.away="showCategoryModal = false">
+            <h2 class="text-xl font-bold mb-4">Tambah Kategori Baru</h2>
+
+            <form @submit.prevent="saveCategory()" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-slate-500 mb-1">Nama Kategori</label>
+                    <input x-model="newCategoryName" type="text" placeholder="Contoh: Makanan, Minuman, Alat Tulis"
+                        class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:border-blue-500 text-white"
+                        :disabled="isSaving" required>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="button" @click="showCategoryModal = false"
+                        class="flex-1 px-4 py-2 border border-slate-700 rounded-lg hover:bg-slate-800 transition">
+                        Batal
+                    </button>
+                    <button type="submit" :disabled="isSaving"
+                        class="flex-1 px-4 py-2 bg-green-600 rounded-lg font-bold hover:bg-green-500 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span x-text="isSaving ? 'Memproses...' : 'Simpan'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+        x-cloak>
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl p-6"
+            @click.away="showModal = false">
+            <h2 class="text-xl font-bold mb-6" x-text="editMode ? 'Edit Produk' : 'Tambah Produk Baru'"></h2>
+
+            <form @submit.prevent="saveProduct()" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-xs text-slate-500 mb-1">Nama Produk</label>
+                        <input x-model="form.name" type="text" required
+                            class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs text-slate-500 mb-1">Kategori</label>
+                        <select x-model="form.category_id" required
+                            class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none text-white">
+                            <option value="">Pilih Kategori</option>
+                            <template x-for="cat in categories" :key="cat.id">
+                                <option :value="cat.id" x-text="cat.name" :selected="form.category_id == cat.id">
+                                </option>
+                            </template>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 mb-1">Barcode</label>
+                        <input x-model="form.barcode" type="text" required
+                            class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 mb-1">SKU (Opsional)</label>
+                        <input x-model="form.sku" type="text"
+                            class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 mb-1">Harga Jual</label>
+                        <input x-model.number="form.price" type="number" required
+                            class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 mb-1">Harga Modal</label>
+                        <input x-model.number="form.cost" type="number"
+                            class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 mb-1">Stok Awal</label>
+                        <input x-model.number="form.stock" type="number"
+                            class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 mb-1">Min. Stok</label>
+                        <input x-model.number="form.min_stock" type="number"
+                            class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-8">
+                    <button type="button" @click="showModal = false"
+                        class="flex-1 px-4 py-2 border border-slate-700 rounded-lg hover:bg-slate-800 transition">Batal</button>
+                    <button type="submit"
+                        class="flex-1 px-4 py-2 bg-blue-600 rounded-lg font-bold hover:bg-blue-500 transition">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

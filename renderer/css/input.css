@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Beritahu Tailwind v4 di mana letak file HTML Anda */
+@source "../index.html";
+@source "../*.html";
+@source "./pages/**/*.html";

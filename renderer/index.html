@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline';">
+    <title>MSM POS</title>
+    <link rel="stylesheet" href="css/output.css">
+
+    <script defer src="js/app.js"></script>
+    <script src="js/pages/products.js"></script>
+    <script defer src="js/alpine.min.js"></script>
+    <script src="js/sweetalert2@11.js"></script>
+    <script src="js/utils.js"></script>
+</head>
+
+<body class="bg-slate-900 text-white" x-data="mainApp()" x-init="init()">
+    <div class="flex h-screen overflow-hidden">
+
+        <template x-if="isLoggedIn && currentPage !== 'pos'">
+            <aside class="w-64 bg-slate-950 border-r border-slate-800 flex flex-col p-6">
+                <div class="mb-10">
+                    <h2 class="text-xl font-bold text-blue-500 italic">MSM <span class="text-white">POS</span></h2>
+                </div>
+
+                <nav class="space-y-2 flex-1">
+                    <button @click="currentPage = 'dashboard'"
+                        :class="currentPage === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-900'"
+                        class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-left">
+                        🏠 Dashboard
+                    </button>
+                    <button @click="currentPage = 'products'"
+                        :class="currentPage === 'products' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-900'"
+                        class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-left">
+                        📦 Produk
+                    </button>
+                    <button @click="currentPage = 'pos'"
+                        class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-900 rounded-xl transition font-medium text-left">
+                        🛒 Kasir (POS)
+                    </button>
+                </nav>
+
+                <button @click="logout()"
+                    class="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition font-medium text-left">
+                    🚪 Keluar
+                </button>
+            </aside>
+        </template>
+
+        <main class="flex-1 overflow-y-auto" :class="isLoggedIn && currentPage !== 'pos' ? 'bg-slate-900' : ''">
+            <div x-html="content"></div>
+        </main>
+
+    </div>
+</body>
+
+</html>
