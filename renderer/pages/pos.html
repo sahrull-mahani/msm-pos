@@ -1,0 +1,96 @@
+<div x-data="posPage()" x-init="init()" class="flex flex-col h-[calc(100vh-120px)]">
+    <div class="flex gap-6 h-full">
+        <div class="flex-1 flex flex-col bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+            <div class="p-4 border-b border-slate-800">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-3 flex items-center text-slate-400">🔍</span>
+                    <input type="text" x-model="searchQuery" @input.debounce.300ms="searchProduct()"
+                        @keydown.enter="addToCartFromSearch()"
+                        placeholder="Cari Nama Produk atau Scan Barcode..."
+                        class="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white outline-none focus:border-blue-500">
+                    
+                    <template x-if="searchResults.length > 0">
+                        <div class="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden">
+                            <template x-for="p in searchResults" :key="p.id">
+                                <div @click="addToCart(p)" class="p-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700 flex justify-between items-center">
+                                    <div>
+                                        <div class="font-bold text-white" x-text="p.name"></div>
+                                        <div class="text-xs text-slate-400" x-text="'SKU: ' + p.sku + ' | Stok: ' + p.stock"></div>
+                                    </div>
+                                    <div class="text-blue-400 font-bold" x-text="formatRupiah(p.price)"></div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-slate-500 text-sm border-b border-slate-800">
+                            <th class="pb-3 px-2">Produk</th>
+                            <th class="pb-3 px-2 w-32 text-center">Qty</th>
+                            <th class="pb-3 px-2 text-right">Subtotal</th>
+                            <th class="pb-3 px-2 w-10"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="(item, index) in cart" :key="item.id">
+                            <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition">
+                                <td class="py-4 px-2">
+                                    <div class="font-medium text-white" x-text="item.name"></div>
+                                    <div class="text-xs text-slate-500" x-text="formatRupiah(item.price)"></div>
+                                </td>
+                                <td class="py-4 px-2">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button @click="updateQty(index, -1)" class="w-8 h-8 rounded bg-slate-800 hover:bg-slate-700">-</button>
+                                        <input type="number" x-model.number="item.qty" @input="calculateTotal()"
+                                            class="w-12 bg-transparent text-center outline-none">
+                                        <button @click="updateQty(index, 1)" class="w-8 h-8 rounded bg-slate-800 hover:bg-slate-700">+</button>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-2 text-right font-bold text-white" x-text="formatRupiah(item.price * item.qty)"></td>
+                                <td class="py-4 px-2 text-right">
+                                    <button @click="removeFromCart(index)" class="text-red-500 hover:text-red-400">✕</button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+                <template x-if="cart.length === 0">
+                    <div class="h-full flex flex-col items-center justify-center text-slate-600 opacity-50 mt-20">
+                        <div class="text-6xl mb-4">🛒</div>
+                        <p>Keranjang masih kosong</p>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <div class="w-96 flex flex-col gap-4">
+            <div class="bg-blue-600 rounded-2xl p-6 shadow-xl shadow-blue-900/20 text-white">
+                <div class="text-sm opacity-80 mb-1">Total Tagihan</div>
+                <div class="text-4xl font-black" x-text="formatRupiah(total)"></div>
+            </div>
+
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 flex flex-col gap-4">
+                <div>
+                    <label class="text-xs text-slate-500 block mb-1">Nominal Bayar (F8)</label>
+                    <input type="number" x-model.number="cash" @input="calculateChange()"
+                        class="w-full bg-slate-800 border border-slate-700 rounded-xl py-4 px-4 text-2xl font-bold text-green-400 outline-none focus:border-green-500">
+                </div>
+
+                <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                    <span class="text-slate-400">Kembalian</span>
+                    <span class="text-xl font-bold text-white" x-text="formatRupiah(change)"></span>
+                </div>
+
+                <button @click="processCheckout()" :disabled="cart.length === 0 || cash < total"
+                    class="w-full bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:opacity-50 text-white py-4 rounded-xl font-black text-xl transition shadow-lg shadow-green-900/20 mt-4">
+                    BAYAR SEKARANG
+                </button>
+                <button @click="clearCart()" class="text-slate-500 text-sm hover:text-red-400 transition">Kosongkan Keranjang (ESC)</button>
+            </div>
+        </div>
+    </div>
+</div>

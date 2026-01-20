@@ -2,12 +2,14 @@ const { app, BrowserWindow } = require('electron')
 const path = require('path')
 const { initAuthIPC } = require('./ipc/auth.ipc.js')
 const { initProductsIPC } = require('./ipc/products.ipc.js')
+const { initUsersIPC } = require('./ipc/users.ipc.js')
 
 function createWindow() {
   // Membuat jendela browser utama
   const win = new BrowserWindow({
     width: 800,
     height: 600,
+    fullscreen: true,
     webPreferences: {
       // Mengarahkan ke file preload jika dibutuhkan di masa depan
       preload: path.join(__dirname, 'preload.js'),
@@ -25,6 +27,7 @@ function createWindow() {
 app.whenReady().then(() => {
   initAuthIPC()
   initProductsIPC()
+  initUsersIPC()
   createWindow()
 
   app.on('activate', () => {

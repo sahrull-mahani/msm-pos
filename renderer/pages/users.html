@@ -1,0 +1,91 @@
+<div x-data="usersPage()" x-init="init()" class="p-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-white">Manajemen User</h1>
+            <p class="text-slate-400 text-sm">Kelola hak akses staf kasir dan admin</p>
+        </div>
+        <button @click="openAddModal()"
+            class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-lg">
+            <span>➕</span> Tambah User
+        </button>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <table class="w-full text-left">
+            <thead class="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-widest">
+                <tr>
+                    <th class="p-4">Username</th>
+                    <th class="p-4">Role</th>
+                    <th class="p-4 text-right">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="text-slate-300">
+                <template x-for="u in users" :key="u.id">
+                    <tr class="border-b border-slate-800 hover:bg-slate-800/30 transition">
+                        <td class="p-4 font-medium text-white" x-text="u.username"></td>
+                        <td class="p-4 text-sm" x-text="u.role_name ? u.role_name.toUpperCase() : ''"></td>
+                        <td class="p-4 text-right space-x-2">
+                            <button @click="editUser(u)" class="text-blue-500 hover:text-blue-300">✏️ Edit</button>
+                            <template x-if="u.role_name !== 'owner'">
+                                <button @click="deleteUser(u.id)" class="text-red-500 hover:text-red-300">🗑️</button>
+                            </template>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+        x-cloak @keydown.escape.window="showModal = false">
+
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl p-8" @click.stop>
+            <h2 class="text-xl font-bold text-white mb-6" x-text="isEdit ? '✏️ Edit User' : '➕ Tambah User'"></h2>
+
+            <form @submit.prevent.stop="saveUser()" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-slate-500 mb-2 font-bold uppercase">Username</label>
+                    <input id="input_username" type="text" required autocomplete="off"
+                        @input="$event.target.value = $event.target.value.replace(/\s/g, '')"
+                        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-500 mb-2 font-bold uppercase">Password</label>
+                    <input id="input_password" type="password" autocomplete="new-password" :required="!isEdit"
+                        :placeholder="isEdit ? 'Kosongkan jika tidak ganti' : 'Minimal 6 karakter'"
+                        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-500 mb-2 font-bold uppercase">Role</label>
+                    <select x-model="form.role_id" required
+                        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none cursor-pointer">
+                        <option value="">-- Pilih Role --</option>
+                        <template x-for="r in roles" :key="r.id">
+                            <option :value="r.id" x-text="r.name.toUpperCase()"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <div class="flex gap-2 pt-4">
+                    <button type="button" @click="showModal = false"
+                        class="flex-1 p-3 text-white border border-slate-700 rounded-xl hover:bg-slate-800 transition">
+                        Batal
+                    </button>
+
+                    <button type="submit" :disabled="isLoading"
+                        class="flex-1 p-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2"
+                        :class="isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-500'">
+
+                        <template x-if="isLoading">
+                            <span
+                                class="animate-spin h-4 w-4 border-2 border-white/20 border-t-white rounded-full"></span>
+                        </template>
+                        <span x-text="isLoading ? 'Menyimpan...' : 'Simpan User'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

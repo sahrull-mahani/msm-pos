@@ -1,23 +1,43 @@
 window.mainApp = function () {
+    // 1. Cek data di storage dengan proteksi maksimal
+    const rawUser = localStorage.getItem('userData')
+    const savedUser = rawUser ? JSON.parse(rawUser) : { username: 'Guest', role_name: 'kasir' }
+    const savedLogin = localStorage.getItem('isLoggedIn') === 'true'
+
     return {
-        isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
+        isLoggedIn: savedLogin,
+        user: savedUser,
         currentPage: '',
         content: '',
-        products: [], // Properti untuk menampung data produk
 
         init() {
-            // Tentukan halaman awal berdasarkan status login
+            window.app = this
+
+            // 2. Jika tidak login, paksa ke login. Jika login, ke dashboard
             this.currentPage = this.isLoggedIn ? 'dashboard' : 'login'
 
-            // Muat halaman pertama kali
+            console.log('Aplikasi dimulai di halaman:', this.currentPage)
             this.loadPage(this.currentPage)
 
-            // Pantau perubahan halaman
             this.$watch('currentPage', (val) => {
-                this.loadPage(val)
+                if (val) this.loadPage(val)
             })
+        },
 
-            window.app = this
+        // Fungsi pengecekan role yang aman
+        hasRole(roles) {
+            // Jika user belum login atau tidak punya role, jangan beri akses apa pun
+            if (!this.user || !this.user.role_name) return false
+
+            const userRole = this.user.role_name.toLowerCase()
+
+            // Jika input 'roles' adalah string (misal: 'owner')
+            if (typeof roles === 'string') {
+                return userRole === roles.toLowerCase()
+            }
+
+            // Jika input 'roles' adalah array (misal: ['owner', 'admin'])
+            return roles.map(r => r.toLowerCase()).includes(userRole)
         },
 
         async loadPage(page) {
@@ -25,9 +45,10 @@ window.mainApp = function () {
                 const resp = await fetch(`pages/${page}.html`)
                 if (!resp.ok) throw new Error('Halaman tidak ditemukan')
 
-                this.content = await resp.text()
+                const html = await resp.text()
+                this.content = html
 
-                // Beri jeda agar DOM terisi sebelum refresh data halaman terkait
+                // Trigger refresh data untuk komponen halaman
                 setTimeout(() => {
                     if (window.appData && typeof window.appData.refresh === 'function') {
                         window.appData.refresh()
@@ -35,59 +56,34 @@ window.mainApp = function () {
                 }, 100)
             } catch (err) {
                 console.error('Gagal memuat halaman:', err)
-                window.ui.error('Navigasi Error', 'Gagal memuat halaman ' + page)
+                // Jika error parah, balikkan ke login
+                if (page !== 'login') this.currentPage = 'login'
             }
         },
 
         async login(username, password) {
-            try {
-                const response = await window.api.login({ username, password })
-
-                if (response.success) {
-                    this.isLoggedIn = true
-                    localStorage.setItem('isLoggedIn', 'true')
-                    // Simpan data user jika perlu
-                    if (response.user) localStorage.setItem('userData', JSON.stringify(response.user))
-
-                    this.currentPage = 'dashboard'
-                    window.ui.toast('Selamat datang kembali!')
-                } else {
-                    window.ui.error('Login Gagal', response.message)
-                }
-            } catch (err) {
-                window.ui.error('Sistem Error', 'Gagal terhubung ke layanan login')
+            const res = await window.api.login({ username, password })
+            if (res.success) {
+                this.isLoggedIn = true
+                this.user = res.user
+                localStorage.setItem('isLoggedIn', 'true')
+                localStorage.setItem('userData', JSON.stringify(res.user))
+                this.currentPage = 'dashboard'
+                window.ui.toast('Selamat Datang!')
+            } else {
+                window.ui.error('Login Gagal', res.message)
             }
         },
 
         async logout() {
-            const yakin = await window.ui.confirm('Konfirmasi Logout', 'Apakah Anda yakin ingin keluar dari aplikasi?')
-
+            const yakin = await window.ui.confirm('Logout', 'Yakin ingin keluar?')
             if (yakin) {
-                // 1. Bersihkan storage
-                localStorage.removeItem('isLoggedIn')
-                localStorage.removeItem('userData')
-
-                // 2. Update state internal
+                localStorage.clear()
                 this.isLoggedIn = false
-
-                // 3. Panggil API main process jika ada pembersihan session khusus
-                if (window.api.clearSession) {
-                    await window.api.clearSession()
-                }
-
-                // 4. Kembali ke halaman login (SPA mode)
+                this.user = { username: 'Guest', role_name: 'kasir' }
                 this.currentPage = 'login'
-
-                window.ui.toast('Berhasil keluar', 'info')
-            }
-        },
-
-        async fetchProducts() {
-            try {
-                const data = await window.api.getProducts()
-                this.products = data
-            } catch (err) {
-                console.error('Gagal fetch products:', err)
+                // Paksa reload agar state benar-benar bersih
+                location.reload()
             }
         }
     }

@@ -8,48 +8,50 @@
     <title>MSM POS</title>
     <link rel="stylesheet" href="css/output.css">
 
-    <script defer src="js/app.js"></script>
-    <script src="js/pages/products.js"></script>
-    <script defer src="js/alpine.min.js"></script>
     <script src="js/sweetalert2@11.js"></script>
     <script src="js/utils.js"></script>
+    <script defer src="js/app.js"></script>
+    <script src="js/pages/products.js"></script>
+    <script src="js/pages/pos.js"></script>
+    <script src="js/pages/users.js"></script>
+    <script defer src="js/alpine.min.js"></script>
 </head>
 
-<body class="bg-slate-900 text-white" x-data="mainApp()" x-init="init()">
+<body x-data="mainApp()" x-init="init()" class="bg-slate-950 text-white">
+
     <div class="flex h-screen overflow-hidden">
 
         <template x-if="isLoggedIn && currentPage !== 'pos'">
             <aside class="w-64 bg-slate-950 border-r border-slate-800 flex flex-col p-6">
                 <div class="mb-10">
                     <h2 class="text-xl font-bold text-blue-500 italic">MSM <span class="text-white">POS</span></h2>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1" x-text="user.role_name"></p>
                 </div>
-
                 <nav class="space-y-2 flex-1">
                     <button @click="currentPage = 'dashboard'"
-                        :class="currentPage === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-900'"
-                        class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-left">
-                        🏠 Dashboard
-                    </button>
-                    <button @click="currentPage = 'products'"
-                        :class="currentPage === 'products' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-900'"
-                        class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-left">
-                        📦 Produk
-                    </button>
-                    <button @click="currentPage = 'pos'"
-                        class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-900 rounded-xl transition font-medium text-left">
-                        🛒 Kasir (POS)
-                    </button>
+                        class="w-full text-left p-3 rounded-xl hover:bg-slate-900">🏠 Dashboard</button>
+                    <button @click="currentPage = 'pos'" class="w-full text-left p-3 rounded-xl hover:bg-slate-900">🛒
+                        Kasir (POS)</button>
+                    <template x-if="hasRole(['owner', 'admin'])">
+                        <button @click="currentPage = 'products'" class="w-full text-left p-3 rounded-xl hover:bg-slate-900">📦 Produk</button>
+                    </template>
+                    <template x-if="hasRole('owner')">
+                        <button @click="currentPage = 'users'"
+                            class="w-full text-left p-3 rounded-xl hover:bg-slate-900">👥 Users</button>
+                    </template>
                 </nav>
-
-                <button @click="logout()"
-                    class="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition font-medium text-left">
-                    🚪 Keluar
-                </button>
+                <button @click="logout()" class="text-red-500 p-3 text-left">🚪 Keluar</button>
             </aside>
         </template>
 
-        <main class="flex-1 overflow-y-auto" :class="isLoggedIn && currentPage !== 'pos' ? 'bg-slate-900' : ''">
+        <main class="flex-1 overflow-y-auto">
             <div x-html="content"></div>
+
+            <template x-if="!content">
+                <div class="h-full flex items-center justify-center">
+                    <p class="text-slate-700">Memuat halaman... (Cek file di folder pages/)</p>
+                </div>
+            </template>
         </main>
 
     </div>
