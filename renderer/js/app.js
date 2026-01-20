@@ -11,6 +11,7 @@ window.mainApp = function () {
         content: '',
 
         init() {
+            window.mainAppData = this
             window.app = this
 
             // 2. Jika tidak login, paksa ke login. Jika login, ke dashboard
