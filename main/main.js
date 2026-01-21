@@ -3,6 +3,7 @@ const path = require('path')
 const { initAuthIPC } = require('./ipc/auth.ipc.js')
 const { initProductsIPC } = require('./ipc/products.ipc.js')
 const { initUsersIPC } = require('./ipc/users.ipc.js')
+const initPosIPC = require('./ipc/pos.ipc.js')
 
 function createWindow() {
   // Membuat jendela browser utama
@@ -27,6 +28,7 @@ function createWindow() {
 app.whenReady().then(() => {
   initAuthIPC()
   initProductsIPC()
+  initPosIPC()
   initUsersIPC()
   createWindow()
 

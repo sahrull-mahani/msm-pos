@@ -21,4 +21,7 @@ contextBridge.exposeInMainWorld('api', {
     createUser: (data) => ipcRenderer.invoke('users:create', data),
     updateUser: (data) => ipcRenderer.invoke('users:update', data),
     deleteUser: (id) => ipcRenderer.invoke('users:delete', id),
+
+    searchProduct: (query) => ipcRenderer.invoke('pos:search-product', query),
+    saveTransaction: (data) => ipcRenderer.invoke('pos:save-transaction', data),
 })

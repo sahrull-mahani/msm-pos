@@ -21,6 +21,7 @@
                 <div class="relative">
                     <span class="absolute inset-y-0 left-4 flex items-center text-slate-500">🔍</span>
                     <input id="input-search" type="text" x-model="searchQuery" @input.debounce.300ms="searchProduct()"
+                        @keydown.enter.prevent="addToCartFromSearch()"
                         placeholder="Cari nama produk atau scan barcode..."
                         class="w-full bg-slate-800 border border-slate-700 rounded-2xl py-4 pl-12 pr-4 text-white outline-none focus:border-blue-600 transition-all">
 
@@ -58,15 +59,26 @@
                             <tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
                                 <td class="py-4 px-2">
                                     <div class="font-bold text-white" x-text="item.name"></div>
-                                    <div class="text-xs text-slate-500" x-text="formatRupiah(item.price)"></div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-slate-500" x-text="formatRupiah(item.price)"></span>
+                                        <span
+                                            class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-blue-400 border border-slate-700"
+                                            x-text="'Tersedia: ' + item.stock"></span>
+                                    </div>
                                 </td>
                                 <td class="py-4 px-2 text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         <button @click="updateQty(index, -1)"
                                             class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-white">-</button>
-                                        <span class="w-8 font-bold" x-text="item.qty"></span>
-                                        <button @click="updateQty(index, 1)"
-                                            class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-white">+</button>
+
+                                        <input type="text" :value="item.qty" @input="handleQtyInput(index, $event)"
+                                            @blur="if(!item.qty || item.qty < 1) { item.qty = 1; calculateTotal(); }"
+                                            class="w-14 bg-slate-800 border border-slate-700 rounded-lg py-1 text-center font-bold text-white outline-none focus:border-blue-600"
+                                            :class="item.qty >= item.stock ? 'text-orange-500 border-orange-500/50' : 'text-white'">
+
+                                        <button @click="updateQty(index, 1)" :disabled="item.qty >= item.stock"
+                                            :class="item.qty >= item.stock ? 'opacity-20 cursor-not-allowed' : 'hover:bg-slate-700'"
+                                            class="w-8 h-8 rounded-lg bg-slate-800 text-white">+</button>
                                     </div>
                                 </td>
                                 <td class="py-4 px-2 text-right font-black text-white"
@@ -95,11 +107,17 @@
             </div>
 
             <div class="bg-slate-900 rounded-3xl border border-slate-800 p-6 flex flex-col gap-4">
-                <div>
-                    <label class="text-[10px] font-black text-slate-500 uppercase block mb-2 tracking-widest">Nominal
-                        Bayar</label>
-                    <input type="number" x-model.number="cash" @input="calculateChange()"
-                        class="w-full bg-slate-800 border border-slate-700 rounded-2xl py-4 px-4 text-3xl font-black text-green-400 outline-none focus:border-green-500 transition-all">
+                <div class="mt-4">
+                    <label class="text-[10px] font-black text-slate-500 uppercase block mb-2 tracking-widest">
+                        Nominal Bayar (F8)
+                    </label>
+                    <div class="relative flex items-center">
+                        <span class="absolute left-4 text-2xl font-black text-green-600/50 select-none">Rp</span>
+
+                        <input id="input-cash" type="text" x-model="cashDisplay" @input="handleCashInput($event)"
+                            placeholder="0"
+                            class="w-full bg-slate-800 border border-slate-700 rounded-2xl py-5 pl-16 pr-4 text-4xl font-black text-green-400 outline-none focus:border-green-500 transition-all">
+                    </div>
                 </div>
 
                 <div class="flex justify-between items-center py-3 border-b border-slate-800">
@@ -109,10 +127,19 @@
 
                 <button @click="processCheckout()" :disabled="cart.length === 0 || cash < total || isLoading"
                     class="w-full bg-green-600 hover:bg-green-500 disabled:bg-slate-800 disabled:opacity-50 text-white py-5 rounded-2xl font-black text-xl shadow-lg transition-all flex items-center justify-center gap-2">
+
                     <template x-if="isLoading">
-                        <span class="animate-spin h-5 w-5 border-2 border-white/20 border-t-white rounded-full"></span>
+                        <svg class="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
                     </template>
-                    <span x-text="isLoading ? 'PROSES...' : 'BAYAR SEKARANG'"></span>
+
+                    <span x-text="isLoading ? 'SEDANG MEMPROSES...' : 'BAYAR SEKARANG'"></span>
                 </button>
 
                 <button @click="clearCart()"
