@@ -10,6 +10,9 @@ window.posPage = function () {
         isLoading: false,
         isSearching: false, // Tambahkan flag pencarian
         user: null,
+        globalDiscountType: 'rp',
+        globalDiscountInput: 0,
+        globalDiscountAmount: 0,
 
         async init() {
             window.appData = this
@@ -141,31 +144,46 @@ window.posPage = function () {
 
         // Pastikan fungsi addToCart menggunakan perbandingan yang kuat
         addToCart(product) {
-            // Cari index berdasarkan ID produk
             const existingIndex = this.cart.findIndex(i => i.id === product.id)
 
             if (existingIndex !== -1) {
-                if (this.cart[existingIndex].qty < product.stock) {
-                    this.cart[existingIndex].qty = Number(this.cart[existingIndex].qty) + 1
-                    window.ui.toast('Jumlah ditambah')
-                } else {
-                    window.ui.warning('Stok Habis', 'Mencapai batas stok')
-                }
+                this.cart[existingIndex].qty++
             } else {
                 this.cart.push({
                     id: product.id,
                     name: product.name,
                     price: product.price,
+                    stock: product.stock,
                     qty: 1,
-                    stock: product.stock
+                    // Inisialisasi properti diskon agar reaktif
+                    discountType: 'rp',
+                    discountInput: 0,
+                    discountAmount: 0
                 })
-                window.ui.toast('Ditambah ke keranjang')
             }
 
             this.searchQuery = ''
             this.searchResults = []
             this.calculateTotal()
-            this.$nextTick(() => document.querySelector('#input-search')?.focus())
+        },
+
+        handleItemDiscount(index) {
+            let item = this.cart[index]
+
+            // 1. Ambil angka murni
+            let rawValue = String(item.discountInput).replace(/[^0-9]/g, '')
+
+            // 2. Update state (simpan sebagai angka agar perhitungan tidak NaN)
+            item.discountInput = rawValue === '' ? 0 : parseInt(rawValue)
+
+            // 3. Panggil kalkulasi untuk update total dan discountAmount
+            this.calculateTotal()
+        },
+
+        handleGlobalDiscount() {
+            let rawValue = String(this.globalDiscountInput).replace(/[^0-9]/g, '')
+            this.globalDiscountInput = rawValue === '' ? 0 : parseInt(rawValue)
+            this.calculateTotal()
         },
 
         validateInputQty(index) {
@@ -226,7 +244,34 @@ window.posPage = function () {
         },
 
         calculateTotal() {
-            this.total = this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0)
+            let subtotalProduk = 0
+
+            this.cart.forEach(item => {
+                const price = Number(item.price) || 0
+                const qty = Number(item.qty) || 0
+                const discInput = Number(item.discountInput) || 0
+
+                // Hitung nominal potongan (Amount) berdasarkan tipe
+                if (item.discountType === 'percent') {
+                    item.discountAmount = (price * qty) * (discInput / 100)
+                } else {
+                    // Jika nominal Rp, jangan sampai melebihi harga total item
+                    item.discountAmount = Math.min(discInput, price * qty)
+                }
+
+                // Harga item setelah dipotong diskon item
+                subtotalProduk += (price * qty) - item.discountAmount
+            })
+
+            // Hitung diskon global (nota)
+            const globalDiscInput = Number(this.globalDiscountInput) || 0
+            if (this.globalDiscountType === 'percent') {
+                this.globalDiscountAmount = subtotalProduk * (globalDiscInput / 100)
+            } else {
+                this.globalDiscountAmount = Math.min(globalDiscInput, subtotalProduk)
+            }
+
+            this.total = Math.max(0, subtotalProduk - this.globalDiscountAmount)
             this.calculateChange()
         },
 

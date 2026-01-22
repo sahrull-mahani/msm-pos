@@ -50,6 +50,7 @@
                         <tr>
                             <th class="pb-3 px-2">Produk</th>
                             <th class="pb-3 px-2 w-32 text-center">Qty</th>
+                            <th class="pb-3 px-2 w-32 text-center">Disc.</th>
                             <th class="pb-3 px-2 text-right">Subtotal</th>
                             <th class="pb-3 px-2 w-10"></th>
                         </tr>
@@ -81,8 +82,25 @@
                                             class="w-8 h-8 rounded-lg bg-slate-800 text-white">+</button>
                                     </div>
                                 </td>
+                                <td class="py-4 px-2">
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex items-center gap-1">
+                                            <select x-model="item.discountType" @change="calculateTotal()"
+                                                class="bg-slate-800 text-[10px] text-slate-400 rounded border border-slate-700 outline-none">
+                                                <option value="rp">Rp</option>
+                                                <option value="percent">%</option>
+                                            </select>
+                                            <input type="text" x-model="item.discountInput"
+                                                @input="handleItemDiscount(index)" placeholder="0"
+                                                class="w-20 bg-slate-800 border border-slate-700 rounded-lg py-1 px-2 text-xs font-bold text-yellow-500 outline-none focus:border-yellow-600">
+                                        </div>
+                                        <div class="text-[9px] text-slate-500">Potongan: <span
+                                                x-text="formatRupiah(item.discountAmount)"></span></div>
+                                    </div>
+                                </td>
                                 <td class="py-4 px-2 text-right font-black text-white"
-                                    x-text="formatRupiah(item.price * item.qty)"></td>
+                                    x-text="formatRupiah((item.price * item.qty) - item.discountAmount)">
+                                </td>
                                 <td class="py-4 px-2 text-right">
                                     <button @click="removeFromCart(index)"
                                         class="text-red-500 opacity-50 hover:opacity-100">✕</button>
@@ -117,6 +135,23 @@
                         <input id="input-cash" type="text" x-model="cashDisplay" @input="handleCashInput($event)"
                             placeholder="0"
                             class="w-full bg-slate-800 border border-slate-700 rounded-2xl py-5 pl-16 pr-4 text-4xl font-black text-green-400 outline-none focus:border-green-500 transition-all">
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 rounded-3xl border border-slate-800 p-6 flex flex-col gap-4">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Diskon Akhir
+                            (Nota)</label>
+                        <div class="flex gap-2">
+                            <select x-model="globalDiscountType" @change="calculateTotal()"
+                                class="bg-slate-800 text-white rounded-xl border border-slate-700 px-2">
+                                <option value="rp">Rp</option>
+                                <option value="percent">%</option>
+                            </select>
+                            <input type="text" x-model="globalDiscountInput" @input="handleGlobalDiscount()"
+                                class="flex-1 bg-slate-800 border border-slate-700 rounded-xl py-2 px-4 text-white outline-none focus:border-blue-500"
+                                placeholder="0">
+                        </div>
                     </div>
                 </div>
 

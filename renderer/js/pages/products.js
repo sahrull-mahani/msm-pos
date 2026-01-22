@@ -40,10 +40,19 @@ window.productPage = function () {
             if (this.isSaving) return
             this.isSaving = true
 
+            // Konversi nilai string kembali ke angka sebelum dikirim ke API
+            const payload = {
+                ...this.form,
+                price: Number(this.form.price) || 0,
+                cost: Number(this.form.cost) || 0,
+                stock: Number(this.form.stock) || 0,
+                min_stock: Number(this.form.min_stock) || 0
+            }
+
             try {
                 let res = this.editMode
-                    ? await window.api.updateProduct(this.form)
-                    : await window.api.addProduct(this.form)
+                    ? await window.api.updateProduct(payload) // Gunakan payload, bukan this.form
+                    : await window.api.addProduct(payload)    // Gunakan payload, bukan this.form
 
                 if (res.success) {
                     this.showModal = false

@@ -13,6 +13,7 @@ function initPosIPC() {
             CREATE TABLE IF NOT EXISTS transactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 total_price REAL NOT NULL,
+                discount_total REAL DEFAULT 0,
                 cash_amount REAL NOT NULL,
                 change_amount REAL NOT NULL,
                 user_id INTEGER,
@@ -28,6 +29,7 @@ function initPosIPC() {
                 product_id INTEGER NOT NULL,
                 qty INTEGER NOT NULL,
                 price REAL NOT NULL,
+                discount_item REAL DEFAULT 0,
                 subtotal REAL NOT NULL,
                 FOREIGN KEY (transaction_id) REFERENCES transactions (id) ON DELETE CASCADE,
                 FOREIGN KEY (product_id) REFERENCES products (id)

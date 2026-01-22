@@ -132,22 +132,29 @@
                     </div>
                     <div>
                         <label class="block text-xs text-slate-500 mb-1">Harga Jual</label>
-                        <input x-model.number="form.price" type="number" required
+                        <input :value="form.price" @input="form.price = $event.target.value.replace(/[^0-9]/g, '')"
+                            type="text" required
                             class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none">
                     </div>
+
                     <div>
                         <label class="block text-xs text-slate-500 mb-1">Harga Modal</label>
-                        <input x-model.number="form.cost" type="number"
+                        <input :value="form.cost" @input="form.cost = $event.target.value.replace(/[^0-9]/g, '')"
+                            type="text"
                             class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none">
                     </div>
+
                     <div>
                         <label class="block text-xs text-slate-500 mb-1">Stok Awal</label>
-                        <input x-model.number="form.stock" type="number"
+                        <input :value="form.stock" @input="form.stock = $event.target.value.replace(/[^0-9]/g, '')"
+                            type="text"
                             class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none">
                     </div>
+
                     <div>
                         <label class="block text-xs text-slate-500 mb-1">Min. Stok</label>
-                        <input x-model.number="form.min_stock" type="number"
+                        <input :value="form.min_stock"
+                            @input="form.min_stock = $event.target.value.replace(/[^0-9]/g, '')" type="text"
                             class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:border-blue-500 outline-none">
                     </div>
                 </div>
