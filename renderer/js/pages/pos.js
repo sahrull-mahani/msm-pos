@@ -20,11 +20,26 @@ window.posPage = function () {
                 this.user = window.mainAppData.user
             }
 
-            // Shortcut F8 untuk fokus ke bayar
+            // --- SINTAKS SHORTCUT KEYBOARD ---
             window.addEventListener('keydown', (e) => {
+                // F6: Fokus ke Pencarian Produk
+                if (e.key === 'F6') {
+                    e.preventDefault()
+                    const searchInput = document.querySelector('#input-search')
+                    if (searchInput) {
+                        searchInput.focus()
+                        searchInput.select()
+                    }
+                }
+
+                // F8: Fokus ke Nominal Bayar
                 if (e.key === 'F8') {
                     e.preventDefault()
-                    document.querySelector('#input-cash')?.focus()
+                    const cashInput = document.querySelector('#input-cash')
+                    if (cashInput) {
+                        cashInput.focus()
+                        cashInput.select()
+                    }
                 }
             })
 

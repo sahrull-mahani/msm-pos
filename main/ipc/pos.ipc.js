@@ -1,6 +1,7 @@
 const { ipcMain } = require('electron')
 const Database = require('better-sqlite3')
 const path = require('path')
+const printerService = require('../services/printer')
 
 const dbPath = path.join(__dirname, '../../msm_pos.db')
 const db = new Database(dbPath)
@@ -35,7 +36,7 @@ function initPosIPC() {
                 FOREIGN KEY (product_id) REFERENCES products (id)
             )
         `).run()
-        
+
         console.log('Migration Success: Transactions tables are ready.')
     } catch (err) {
         console.error('Migration Error:', err)
@@ -54,7 +55,7 @@ function initPosIPC() {
                 AND is_active = '1'
                 LIMIT 10
             `)
-            
+
             const searchPattern = `%${cleanQuery}%`
             return stmt.all(cleanQuery, searchPattern, searchPattern)
         } catch (error) {
@@ -66,7 +67,7 @@ function initPosIPC() {
     // === HANDLER: Simpan Transaksi ===
     ipcMain.handle('pos:save-transaction', async (event, data) => {
         const { items, total_price, cash_amount, change_amount, user_id } = data
-        
+
         // Gunakan Database Transaction agar data konsisten (All or Nothing)
         const runTransaction = db.transaction(() => {
             // 1. Insert ke table transactions
@@ -96,6 +97,11 @@ function initPosIPC() {
 
         try {
             const resultId = runTransaction()
+
+            // --- PROSES CETAK NOTA ---
+            // Kita panggil tanpa await agar tidak menghambat response ke UI
+            printerService.printReceipt(data).catch(err => console.error('Printer Error:', err))
+
             return { success: true, transactionId: resultId }
         } catch (error) {
             console.error('Save Transaction Error:', error)
